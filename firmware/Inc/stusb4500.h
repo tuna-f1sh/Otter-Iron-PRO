@@ -18,7 +18,7 @@ typedef union {
     uint8_t CapaMismatch                    :       1;
     uint8_t GiveBack                        :       1;
     uint8_t Object_Pos                      :       3; //Bits 30..28 (3-bit)
-    uint8_t reserved_31		                  :       1; //Bits 31
+    uint8_t reserved_31                     :       1; //Bits 31
   } b;
 } STUSB_GEN1S_RDO_REG_STATUS_RegTypeDef;
 

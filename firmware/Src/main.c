@@ -39,7 +39,7 @@
 #define MIN_DUTY 0
 #define MAX_DUTY 2000
 
-#define MIN_VOLTAGE 15.0f
+#define MIN_VOLTAGE 12.0f
 #define MIN_CURRENT 1.0f
 uint16_t wduty = 800;
 
@@ -119,6 +119,8 @@ uint32_t sendDataUSB;
 const unsigned char* dfu_string = (unsigned char*) "dfudfudfudfudfu";
 const unsigned char* otter_string = (unsigned char*) "Otter-Iron";
 const unsigned char* by_string = (unsigned char*) "by Jan Henrik";
+const unsigned char* manufacture_string = (unsigned char*) "built by: ";
+const unsigned char* manufacture = (unsigned char*) "JBR Engineer ";
 
 int main(void)
 {
@@ -162,6 +164,10 @@ int main(void)
   } else {
     draw_string(otter_string, 15, 1 ,1);
     draw_string(by_string, 10, 9 ,1);
+    refresh();
+    HAL_Delay(500);
+    draw_string(manufacture_string, 15, 1 ,1);
+    draw_string(manufacture, 10, 9 ,1);
     refresh();
     HAL_Delay(500);
 #ifdef ENABLESERIAL
@@ -433,14 +439,18 @@ void disp_off(void) {
 
 //not Ralim anymore - https://datasheet.lcsc.com/szlcsc/1810010328_UG-Univision-Semicon-UG-9616TSWCG02_C88335.pdf 4.4.4
 void disp_init(void) {
+  // reset
+  HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST_Pin, 0);
+  HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST2_Pin, 0);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST_Pin, 1);
+  HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST2_Pin, 1);
+  HAL_Delay(10);
   // off
   disp_off();
   // configuration sequence
   memcpy(&screenBuffer[0], &REFRESH_COMMANDS[0], sizeof(REFRESH_COMMANDS));
   refresh();
-  HAL_I2C_Master_Transmit(&hi2c1,DEVICEADDR_OLED, &OLED_Setup_Array[0], sizeof(OLED_Setup_Array), 1000);
-  // repeat above to be sure
-  disp_off();
   HAL_I2C_Master_Transmit(&hi2c1,DEVICEADDR_OLED, &OLED_Setup_Array[0], sizeof(OLED_Setup_Array), 1000);
   // clear by sending empty framebuffer
   clear_screen();
@@ -761,6 +771,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(INT_N_GPIO_Port, &GPIO_InitStruct);
 
+  GPIO_InitStruct.Pin = OLED_RST_Pin|OLED_RST2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  HAL_GPIO_Init(OLED_RST_GPIO_Port, &GPIO_InitStruct);
+  // hold LCD in reset
+  HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST_Pin, 0);
+  HAL_GPIO_WritePin(OLED_RST_GPIO_Port, OLED_RST2_Pin, 0);
 }
 
 void Error_Handler(void)
